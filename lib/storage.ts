@@ -36,6 +36,7 @@ const DEFAULT_GAME_STATE: GameState = {
     skipped: 0,
     isPlaying: false,
     timeRemaining: 60,
+    players: [],
   },
   'kings-cup': {
     deck: [],

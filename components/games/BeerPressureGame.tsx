@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -26,6 +26,15 @@ const BUILT_IN_DECK: CardDeck = {
 
 type GamePhase = 'setup' | 'playing';
 
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 export function BeerPressureGame() {
   const router = useRouter();
   const { vibrate } = useHaptics();
@@ -39,7 +48,8 @@ export function BeerPressureGame() {
   const [phase, setPhase] = useState<GamePhase>('setup');
   const [players, setPlayers] = useState<string[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-  const [currentDeck, setCurrentDeck] = useState<CardDeck>(BUILT_IN_DECK);
+  const [selectedDeckIds, setSelectedDeckIds] = useState<string[]>([BUILT_IN_DECK.id]);
+  const [shuffledCards, setShuffledCards] = useState<Card[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeRules, setActiveRules] = useState<Card[]>([]);
   const [showDeckPicker, setShowDeckPicker] = useState(false);
@@ -48,14 +58,26 @@ export function BeerPressureGame() {
 
   // Load saved state on mount
   useEffect(() => {
-    if (state.currentDeckId) {
-      const deck = allDecks.find((d) => d.id === state.currentDeckId) || BUILT_IN_DECK;
-      setCurrentDeck(deck);
+    if (state.selectedDeckIds && state.selectedDeckIds.length > 0) {
+      setSelectedDeckIds(state.selectedDeckIds);
+    } else if (state.currentDeckId) {
+      // Backwards compatibility
+      setSelectedDeckIds([state.currentDeckId]);
     }
     if (state.players && state.players.length > 0) {
       setPlayers(state.players);
     }
   }, []);
+
+  // Get selected decks
+  const selectedDecks = useMemo(() => {
+    return allDecks.filter((d) => selectedDeckIds.includes(d.id));
+  }, [selectedDeckIds, allDecks]);
+
+  // Total card count
+  const totalCards = useMemo(() => {
+    return selectedDecks.reduce((sum, deck) => sum + deck.cards.length, 0);
+  }, [selectedDecks]);
 
   const addPlayer = (name: string) => {
     const updatedPlayers = [...players, name];
@@ -69,11 +91,16 @@ export function BeerPressureGame() {
     updateGameState('beer-pressure', { players: updatedPlayers });
   };
 
-  const selectDeck = (deck: CardDeck) => {
-    setCurrentDeck(deck);
-    setCurrentIndex(0);
-    setShowDeckPicker(false);
-    updateGameState('beer-pressure', { currentDeckId: deck.id });
+  const toggleDeckSelection = (deckId: string) => {
+    setSelectedDeckIds((prev) => {
+      if (prev.includes(deckId)) {
+        // Don't allow deselecting if it's the only one
+        if (prev.length === 1) return prev;
+        return prev.filter((id) => id !== deckId);
+      } else {
+        return [...prev, deckId];
+      }
+    });
   };
 
   const handleGenerateDeck = async () => {
@@ -110,7 +137,8 @@ export function BeerPressureGame() {
       };
 
       addDeck(newDeck);
-      selectDeck(newDeck);
+      // Auto-select the new deck
+      setSelectedDeckIds((prev) => [...prev, newDeck.id]);
       setGenerateTheme('');
     } catch (err) {
       console.error(err);
@@ -121,13 +149,18 @@ export function BeerPressureGame() {
   };
 
   const startGame = () => {
-    if (players.length >= 2 && currentDeck) {
+    if (players.length >= 2 && selectedDecks.length > 0) {
+      // Combine all cards from selected decks and shuffle
+      const allCards = selectedDecks.flatMap((deck) => deck.cards);
+      const shuffled = shuffleArray(allCards);
+      setShuffledCards(shuffled);
+
       setPhase('playing');
       setCurrentPlayerIndex(0);
       setCurrentIndex(0);
       setActiveRules([]);
       updateGameState('beer-pressure', {
-        currentDeckId: currentDeck.id,
+        selectedDeckIds,
         currentCardIndex: 0,
         activeRules: [],
         currentPlayerIndex: 0,
@@ -136,10 +169,10 @@ export function BeerPressureGame() {
   };
 
   const handleNextCard = () => {
-    if (!currentDeck) return;
+    if (shuffledCards.length === 0) return;
 
     vibrate(50);
-    const currentCard = currentDeck.cards[currentIndex];
+    const currentCard = shuffledCards[currentIndex];
 
     let newActiveRules = [...activeRules];
     if (currentCard?.category === 'rule') {
@@ -169,6 +202,7 @@ export function BeerPressureGame() {
       setCurrentIndex(0);
       setActiveRules([]);
       setCurrentPlayerIndex(0);
+      setShuffledCards([]);
       updateGameState('beer-pressure', {
         currentCardIndex: 0,
         activeRules: [],
@@ -182,7 +216,7 @@ export function BeerPressureGame() {
   };
 
   const currentPlayer = players[currentPlayerIndex];
-  const currentCard = currentDeck?.cards[currentIndex];
+  const currentCard = shuffledCards[currentIndex];
 
   // ─── LOBBY SCREEN ───────────────────────────────────────────────
   if (phase === 'setup') {
@@ -199,7 +233,7 @@ export function BeerPressureGame() {
               textDecoration: 'none',
             }}
           >
-            ← INDEX
+            &larr; INDEX
           </Link>
 
           <Kicker color="var(--copper)" className="mt-8">
@@ -256,9 +290,20 @@ export function BeerPressureGame() {
 
           {/* Deck Selection */}
           <div style={{ marginTop: 34 }}>
-            <Kicker color="var(--muted)">DECK</Kicker>
+            <Kicker color="var(--muted)">SELECT DECKS</Kicker>
+            <div
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                color: 'var(--cream-2)',
+                marginTop: 4,
+                letterSpacing: 0.5,
+              }}
+            >
+              Select multiple decks to mix cards together
+            </div>
 
-            {/* Current deck display */}
+            {/* Current selection summary */}
             {!showDeckPicker && (
               <button
                 onClick={() => setShowDeckPicker(true)}
@@ -282,7 +327,7 @@ export function BeerPressureGame() {
                         color: 'var(--cream)',
                       }}
                     >
-                      {currentDeck.name}
+                      {selectedDecks.length} deck{selectedDecks.length !== 1 ? 's' : ''} selected
                     </div>
                     <div
                       style={{
@@ -292,7 +337,7 @@ export function BeerPressureGame() {
                         marginTop: 4,
                       }}
                     >
-                      {currentDeck.cards.length} CARDS · {currentDeck.source === 'ai-generated' ? 'AI GENERATED' : 'BUILT-IN'}
+                      {totalCards} CARDS TOTAL
                     </div>
                   </div>
                   <div
@@ -303,66 +348,77 @@ export function BeerPressureGame() {
                       letterSpacing: 1,
                     }}
                   >
-                    CHANGE →
+                    CHANGE &rarr;
                   </div>
                 </div>
               </button>
             )}
 
-            {/* Deck picker */}
+            {/* Deck picker with checkboxes */}
             {showDeckPicker && (
               <div style={{ marginTop: 10 }}>
                 {/* All available decks */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-                  {allDecks.map((deck) => (
-                    <button
-                      key={deck.id}
-                      onClick={() => selectDeck(deck)}
-                      style={{
-                        padding: 14,
-                        border: currentDeck.id === deck.id ? '1px solid var(--copper)' : '1px solid var(--rule)',
-                        background: currentDeck.id === deck.id ? 'var(--ink-2)' : 'transparent',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                        <div>
-                          <div
-                            style={{
-                              fontFamily: 'var(--font-serif)',
-                              fontStyle: 'italic',
-                              fontSize: 16,
-                              color: 'var(--cream)',
-                            }}
-                          >
-                            {deck.name}
-                          </div>
-                          <div
-                            style={{
-                              fontFamily: 'var(--font-mono)',
-                              fontSize: 10,
-                              color: 'var(--muted)',
-                              marginTop: 4,
-                            }}
-                          >
-                            {deck.cards.length} CARDS · {deck.source === 'ai-generated' ? 'AI' : 'BUILT-IN'}
+                  {allDecks.map((deck) => {
+                    const isSelected = selectedDeckIds.includes(deck.id);
+                    return (
+                      <button
+                        key={deck.id}
+                        onClick={() => toggleDeckSelection(deck.id)}
+                        style={{
+                          padding: 14,
+                          border: isSelected ? '1px solid var(--copper)' : '1px solid var(--rule)',
+                          background: isSelected ? 'var(--ink-2)' : 'transparent',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            {/* Checkbox */}
+                            <div
+                              style={{
+                                width: 20,
+                                height: 20,
+                                border: isSelected ? '2px solid var(--copper)' : '2px solid var(--rule)',
+                                background: isSelected ? 'var(--copper)' : 'transparent',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'var(--ink)',
+                                fontSize: 14,
+                                fontWeight: 'bold',
+                              }}
+                            >
+                              {isSelected && '✓'}
+                            </div>
+                            <div>
+                              <div
+                                style={{
+                                  fontFamily: 'var(--font-serif)',
+                                  fontStyle: 'italic',
+                                  fontSize: 16,
+                                  color: 'var(--cream)',
+                                }}
+                              >
+                                {deck.name}
+                              </div>
+                              <div
+                                style={{
+                                  fontFamily: 'var(--font-mono)',
+                                  fontSize: 10,
+                                  color: 'var(--muted)',
+                                  marginTop: 4,
+                                }}
+                              >
+                                {deck.cards.length} CARDS · {deck.source === 'ai-generated' ? 'AI' : 'BUILT-IN'}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        {currentDeck.id === deck.id && (
-                          <div
-                            style={{
-                              fontFamily: 'var(--font-mono)',
-                              fontSize: 10,
-                              color: 'var(--copper)',
-                            }}
-                          >
-                            SELECTED
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Generate new deck */}
@@ -421,7 +477,7 @@ export function BeerPressureGame() {
                   </div>
                 </div>
 
-                {/* Cancel button */}
+                {/* Done button */}
                 <button
                   onClick={() => setShowDeckPicker(false)}
                   style={{
@@ -437,7 +493,7 @@ export function BeerPressureGame() {
                     cursor: 'pointer',
                   }}
                 >
-                  DONE
+                  DONE ({selectedDecks.length} SELECTED · {totalCards} CARDS)
                 </button>
               </div>
             )}
@@ -446,8 +502,8 @@ export function BeerPressureGame() {
 
         {/* CTA */}
         <div style={{ position: 'fixed', bottom: 50, left: 16, right: 16 }}>
-          <PrimaryButton onClick={startGame} disabled={players.length < 2}>
-            Begin →
+          <PrimaryButton onClick={startGame} disabled={players.length < 2 || selectedDecks.length === 0}>
+            Begin &rarr;
           </PrimaryButton>
         </div>
 
@@ -458,7 +514,22 @@ export function BeerPressureGame() {
   }
 
   // ─── IN-PLAY CARD SCREEN ────────────────────────────────────────
-  if (!currentDeck || !currentCard) {
+  if (shuffledCards.length === 0 || !currentCard) {
+    // Check if we've reached the end
+    if (currentIndex >= shuffledCards.length && shuffledCards.length > 0) {
+      return (
+        <div style={{ background: 'var(--ink)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', padding: 22 }}>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 32, color: 'var(--cream)', textAlign: 'center', marginBottom: 20 }}>
+            That&apos;s all<br /><ItalicAccent>the cards!</ItalicAccent>
+          </div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)', letterSpacing: 1.5, marginBottom: 30 }}>
+            {shuffledCards.length} CARDS PLAYED
+          </div>
+          <SecondaryButton onClick={handleEnd}>Back to Setup</SecondaryButton>
+        </div>
+      );
+    }
+
     return (
       <div style={{ background: 'var(--ink)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)', letterSpacing: 1.5 }}>
@@ -488,7 +559,7 @@ export function BeerPressureGame() {
               cursor: 'pointer',
             }}
           >
-            ← BEER PRESSURE
+            &larr; BEER PRESSURE
           </button>
           <div
             style={{
@@ -498,7 +569,7 @@ export function BeerPressureGame() {
               letterSpacing: 1.5,
             }}
           >
-            Nº {cardNum}
+            Nº {cardNum} / {shuffledCards.length}
           </div>
         </div>
       </div>
@@ -579,7 +650,7 @@ export function BeerPressureGame() {
           <SecondaryButton onClick={handleEnd}>END</SecondaryButton>
         </div>
         <div style={{ flex: 2 }}>
-          <PrimaryButton onClick={handleNextCard}>NEXT CARD →</PrimaryButton>
+          <PrimaryButton onClick={handleNextCard}>NEXT CARD &rarr;</PrimaryButton>
         </div>
       </div>
     </div>

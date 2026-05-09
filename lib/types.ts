@@ -50,6 +50,7 @@ export type AppSettings = {
 
 export type BeerPressureState = {
   currentDeckId: string | null;
+  selectedDeckIds?: string[];
   currentCardIndex: number;
   activeRules: Card[];
   favorites: string[];
@@ -71,6 +72,7 @@ export type IdGameState = {
   skipped: number;
   isPlaying: boolean;
   timeRemaining: number;
+  players: string[];
 };
 
 export type KingsCupState = {
