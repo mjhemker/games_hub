@@ -1,65 +1,205 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import Link from 'next/link';
+import { PHASE_1_GAMES, PHASE_2_GAMES } from '@/games';
+import { D1Mark, D1Rule, Kicker, ItalicAccent } from '@/components/ui/design-system';
+
+export default function HomePage() {
+  const currentTime = new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div style={{ background: 'var(--ink)', minHeight: '100%' }}>
+      {/* Header */}
+      <div style={{ padding: '60px 22px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 14 }}>
+          <D1Mark />
+          <div
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 9,
+              color: 'var(--muted)',
+              letterSpacing: 1.5,
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {dayOfWeek} · {currentTime}
+          </div>
         </div>
-      </main>
+
+        {/* Hero */}
+        <Kicker color="var(--copper)" className="mt-9">
+          Nº 047
+        </Kicker>
+        <div
+          style={{
+            fontFamily: 'var(--font-serif)',
+            fontSize: 50,
+            lineHeight: 0.95,
+            marginTop: 10,
+            letterSpacing: -1,
+            color: 'var(--cream)',
+          }}
+        >
+          Pick your<br />
+          <ItalicAccent>poison</ItalicAccent>.
+        </div>
+        <div
+          style={{
+            fontFamily: 'var(--font-serif)',
+            fontSize: 14,
+            color: 'var(--cream-2)',
+            marginTop: 14,
+            lineHeight: 1.5,
+          }}
+        >
+          Seven games for the room. Sit close, speak honestly.
+        </div>
+      </div>
+
+      {/* Games List */}
+      <div style={{ marginTop: 26, borderTop: '1px solid var(--rule)' }}>
+        {PHASE_1_GAMES.map((game) => (
+          <Link
+            key={game.id}
+            href={`/play/${game.id}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '18px 22px',
+              borderBottom: '1px solid var(--rule)',
+              gap: 14,
+              textDecoration: 'none',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                color: game.accent || 'var(--copper)',
+                letterSpacing: 1.5,
+                width: 22,
+              }}
+            >
+              {game.num}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div
+                style={{
+                  fontFamily: 'var(--font-serif)',
+                  fontSize: 20,
+                  lineHeight: 1.1,
+                  color: 'var(--cream)',
+                }}
+              >
+                {game.name}
+              </div>
+              <div
+                style={{
+                  fontSize: 10.5,
+                  color: 'var(--muted)',
+                  marginTop: 3,
+                  letterSpacing: 0.4,
+                }}
+              >
+                {game.tagline}
+              </div>
+            </div>
+            <div
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontStyle: 'italic',
+                fontSize: 13,
+                color: 'var(--cream-2)',
+              }}
+            >
+              open →
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Coming Soon Section */}
+      {PHASE_2_GAMES.length > 0 && (
+        <>
+          <div style={{ padding: '24px 22px 12px' }}>
+            <div
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                color: 'var(--muted)',
+                letterSpacing: 2,
+              }}
+            >
+              COMING SOON
+            </div>
+          </div>
+          <D1Rule />
+          {PHASE_2_GAMES.map((game) => (
+            <div
+              key={game.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '18px 22px',
+                borderBottom: '1px solid var(--rule)',
+                gap: 14,
+                opacity: 0.5,
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  color: 'var(--muted)',
+                  letterSpacing: 1.5,
+                  width: 22,
+                }}
+              >
+                {game.num}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: 20,
+                    lineHeight: 1.1,
+                    color: 'var(--cream-2)',
+                  }}
+                >
+                  {game.name}
+                </div>
+                <div
+                  style={{
+                    fontSize: 10.5,
+                    color: 'var(--muted)',
+                    marginTop: 3,
+                    letterSpacing: 0.4,
+                  }}
+                >
+                  {game.tagline}
+                </div>
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--font-serif)',
+                  fontStyle: 'italic',
+                  fontSize: 13,
+                  color: 'var(--muted)',
+                }}
+              >
+                soon
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* Bottom spacing for nav */}
+      <div style={{ height: 120 }} />
     </div>
   );
 }

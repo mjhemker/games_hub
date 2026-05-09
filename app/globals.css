@@ -1,26 +1,317 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* Midnight Editorial Design Tokens */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core palette - ink and cream */
+  --ink: #0c0a09;
+  --ink-2: #15110d;
+  --cream: #f3ecde;
+  --cream-2: #d4cab5;
+  --muted: #8a7d68;
+  --copper: oklch(0.68 0.13 50);
+  --burgundy: oklch(0.42 0.13 25);
+  --rule: rgba(243, 236, 222, 0.12);
+
+  /* Per-game accents */
+  --game-beer-pressure: oklch(0.68 0.13 50);
+  --game-truth-or-drink: oklch(0.65 0.13 15);
+  --game-id-game: oklch(0.62 0.12 250);
+  --game-kings-cup: oklch(0.55 0.13 300);
+  --game-most-likely: oklch(0.62 0.12 145);
+  --game-never: oklch(0.62 0.13 25);
+  --game-categories: oklch(0.65 0.10 195);
+
+  /* Typography */
+  --font-serif: 'Newsreader', 'Times New Roman', serif;
+  --font-sans: 'Inter Tight', Inter, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Spacing */
+  --gutter-desktop: 48px;
+  --gutter-mobile: 22px;
+  --section-gap: 32px;
+
+  /* Borders - NO rounded corners */
+  --radius: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
+  --radius-circle: 999px;
+
+  /* Shadcn compatibility */
+  --background: var(--ink);
+  --foreground: var(--cream);
+  --card: var(--ink-2);
+  --card-foreground: var(--cream);
+  --popover: var(--ink-2);
+  --popover-foreground: var(--cream);
+  --primary: var(--cream);
+  --primary-foreground: var(--ink);
+  --secondary: var(--ink-2);
+  --secondary-foreground: var(--cream);
+  --muted-foreground: var(--muted);
+  --accent: var(--copper);
+  --accent-foreground: var(--ink);
+  --destructive: var(--burgundy);
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--copper);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-cream: var(--cream);
+  --color-cream-2: var(--cream-2);
+  --color-muted: var(--muted);
+  --color-copper: var(--copper);
+  --color-burgundy: var(--burgundy);
+  --color-rule: var(--rule);
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-3xl: var(--radius-3xl);
+  --radius-4xl: var(--radius-4xl);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-[var(--rule)] outline-[var(--copper)]/50;
+  }
+  body {
+    background: var(--ink);
+    color: var(--cream);
+    font-family: var(--font-sans);
+  }
+  html {
+    font-family: var(--font-sans);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Font classes */
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Safe area support for mobile */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* Hide scrollbar but allow scrolling */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent text selection on game cards */
+.select-none {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Smooth card transitions */
+.card-transition {
+  transition: transform 0.18s ease-out, opacity 0.12s ease-out;
+}
+
+/* Disable pull-to-refresh on mobile */
+html {
+  overscroll-behavior: none;
+}
+
+/* Hairline rule utility */
+.rule {
+  background: var(--rule);
+  height: 1px;
+  width: 100%;
+}
+
+.rule-vertical {
+  background: var(--rule);
+  width: 1px;
+  height: 100%;
+}
+
+/* Mono kicker style */
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* Editorial italic emphasis */
+.italic-accent {
+  font-style: italic;
+  color: var(--copper);
+}
+
+/* Button styles - sharp corners */
+.btn-primary {
+  background: var(--cream);
+  color: var(--ink);
+  border: none;
+  padding: 14px 28px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--cream);
+  border: 1px solid var(--rule);
+  padding: 14px 22px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.btn-copper {
+  background: transparent;
+  color: var(--copper);
+  border: 1px solid var(--copper);
+  padding: 14px 22px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* ─── RESPONSIVE DESKTOP SCALING ─────────────────────────────── */
+
+/* Desktop: scale up for larger screens */
+@media (min-width: 768px) {
+  :root {
+    --desktop-scale: 1.15;
+    --gutter-mobile: 32px;
+  }
+
+  /* Center content with max-width on desktop */
+  body > div,
+  #__next > div {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --desktop-scale: 1.25;
+    --gutter-mobile: 40px;
+  }
+
+  body > div,
+  #__next > div {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --desktop-scale: 1.35;
+    --gutter-mobile: 48px;
+  }
+
+  body > div,
+  #__next > div {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+}
+
+/* Desktop typography scaling */
+@media (min-width: 768px) {
+  .kicker {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+  }
+
+  .btn-primary {
+    padding: 16px 32px;
+    font-size: 14px;
+  }
+
+  .btn-secondary {
+    padding: 16px 26px;
+    font-size: 14px;
+  }
+
+  .btn-copper {
+    padding: 16px 26px;
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .kicker {
+    font-size: 12px;
+    letter-spacing: 3px;
+  }
+
+  .btn-primary {
+    padding: 18px 36px;
+    font-size: 15px;
+  }
+
+  .btn-secondary {
+    padding: 18px 30px;
+    font-size: 15px;
+  }
+
+  .btn-copper {
+    padding: 18px 30px;
+    font-size: 13px;
+  }
 }
