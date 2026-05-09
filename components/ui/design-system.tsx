@@ -61,10 +61,11 @@ export function D1Rule({ vertical, className }: { vertical?: boolean; className?
 }
 
 // Mono kicker text
-export function Kicker({ children, color = 'var(--muted)', className }: {
+export function Kicker({ children, color = 'var(--muted)', className, style }: {
   children: React.ReactNode;
   color?: string;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   const isDesktop = useIsDesktop();
   const isLarge = useIsLargeDesktop();
@@ -78,6 +79,7 @@ export function Kicker({ children, color = 'var(--muted)', className }: {
         color,
         letterSpacing: isLarge ? 3 : isDesktop ? 2.5 : 2,
         textTransform: 'uppercase',
+        ...style,
       }}
     >
       {children}
