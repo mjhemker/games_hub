@@ -9,20 +9,55 @@ import { Kicker, ItalicAccent, PrimaryButton, SecondaryButton, PlayerChip, Playe
 import { CardDeck, Card, SpiceLevel } from '@/lib/types';
 import { generateId } from '@/lib/storage';
 
-import beerPressureCards from '@/data/builtin/beer-pressure.json';
+import classicCards from '@/data/builtin/beer-pressure-classic.json';
+import confessionsCards from '@/data/builtin/beer-pressure-confessions.json';
+import challengesCards from '@/data/builtin/beer-pressure-challenges.json';
+import wildcardCards from '@/data/builtin/beer-pressure-wildcard.json';
 
 const MAX_ACTIVE_RULES = 3;
 
-const BUILT_IN_DECK: CardDeck = {
-  id: 'beer-pressure-builtin',
-  name: 'Classic Party',
-  game: 'beer-pressure',
-  theme: 'general',
-  spiceLevel: 2,
-  cards: beerPressureCards as Card[],
-  source: 'built-in',
-  createdAt: 0,
-};
+const BUILT_IN_DECKS: CardDeck[] = [
+  {
+    id: 'bp-classic',
+    name: 'Classic Party',
+    game: 'beer-pressure',
+    theme: 'Classic drinking game prompts',
+    spiceLevel: 2,
+    cards: classicCards as Card[],
+    source: 'built-in',
+    createdAt: 0,
+  },
+  {
+    id: 'bp-confessions',
+    name: 'Spicy Confessions',
+    game: 'beer-pressure',
+    theme: 'Truth or drink style questions',
+    spiceLevel: 2,
+    cards: confessionsCards as Card[],
+    source: 'built-in',
+    createdAt: 0,
+  },
+  {
+    id: 'bp-challenges',
+    name: 'Challenges & Dares',
+    game: 'beer-pressure',
+    theme: 'Physical and social challenges',
+    spiceLevel: 2,
+    cards: challengesCards as Card[],
+    source: 'built-in',
+    createdAt: 0,
+  },
+  {
+    id: 'bp-wildcard',
+    name: 'Wild Card',
+    game: 'beer-pressure',
+    theme: 'Chaotic and unpredictable',
+    spiceLevel: 3,
+    cards: wildcardCards as Card[],
+    source: 'built-in',
+    createdAt: 0,
+  },
+];
 
 type GamePhase = 'setup' | 'playing';
 
@@ -43,12 +78,12 @@ export function BeerPressureGame() {
 
   // Get custom decks for this game
   const customDecks = decks.filter((d) => d.game === 'beer-pressure');
-  const allDecks = [BUILT_IN_DECK, ...customDecks];
+  const allDecks = [...BUILT_IN_DECKS, ...customDecks];
 
   const [phase, setPhase] = useState<GamePhase>('setup');
   const [players, setPlayers] = useState<string[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-  const [selectedDeckIds, setSelectedDeckIds] = useState<string[]>([BUILT_IN_DECK.id]);
+  const [selectedDeckIds, setSelectedDeckIds] = useState<string[]>([BUILT_IN_DECKS[0].id]);
   const [shuffledCards, setShuffledCards] = useState<Card[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeRules, setActiveRules] = useState<Card[]>([]);
