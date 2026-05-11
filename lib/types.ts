@@ -9,7 +9,8 @@ export type GameType =
   | 'categories'
   | 'power-hour'
   | 'movie-mode'
-  | 'schlebens';
+  | 'schlebens'
+  | 'ride-the-bus';
 
 export type CardCategory =
   | 'challenge'
@@ -129,6 +130,25 @@ export type SchlebensState = {
   schlebensCount: number;
 };
 
+export type PlayingCard = {
+  rank: string;
+  suit: string;
+};
+
+export type RideTheBusState = {
+  phase: 'setup' | 'questions' | 'pyramid' | 'ride' | 'complete';
+  playerNames: string[];
+  currentPlayerIndex: number;
+  currentQuestion: number; // 1-4 for the four questions
+  playerCards: Record<string, PlayingCard[]>; // cards each player has
+  deck: PlayingCard[];
+  pyramid: PlayingCard[];
+  pyramidRevealed: boolean[];
+  currentPyramidIndex: number;
+  busRider: string | null;
+  busRiderStreak: number; // how many questions answered correctly in a row
+};
+
 export type GameState = {
   'beer-pressure': BeerPressureState;
   'truth-or-drink': TruthOrDrinkState;
@@ -141,6 +161,7 @@ export type GameState = {
   'power-hour': PowerHourState;
   'movie-mode': MovieModeState;
   'schlebens': SchlebensState;
+  'ride-the-bus': RideTheBusState;
 };
 
 export type GameConfig = {

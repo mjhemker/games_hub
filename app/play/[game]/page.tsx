@@ -12,6 +12,7 @@ import { MostLikelyToGame } from '@/components/games/MostLikelyToGame';
 import { NeverHaveIEverGame } from '@/components/games/NeverHaveIEverGame';
 import { CategoriesGame } from '@/components/games/CategoriesGame';
 import { SchlebensGame } from '@/components/games/SchlebensGame';
+import { RideTheBusGame } from '@/components/games/RideTheBusGame';
 
 const GAME_COMPONENTS: Partial<Record<GameType, React.ComponentType>> = {
   'beer-pressure': BeerPressureGame,
@@ -22,6 +23,7 @@ const GAME_COMPONENTS: Partial<Record<GameType, React.ComponentType>> = {
   'never-have-i-ever': NeverHaveIEverGame,
   'categories': CategoriesGame,
   'schlebens': SchlebensGame,
+  'ride-the-bus': RideTheBusGame,
 };
 
 export default function GamePlayPage({

@@ -83,6 +83,19 @@ const DEFAULT_GAME_STATE: GameState = {
     totalRolls: 0,
     schlebensCount: 0,
   },
+  'ride-the-bus': {
+    phase: 'setup',
+    playerNames: [],
+    currentPlayerIndex: 0,
+    currentQuestion: 1,
+    playerCards: {},
+    deck: [],
+    pyramid: [],
+    pyramidRevealed: [],
+    currentPyramidIndex: 0,
+    busRider: null,
+    busRiderStreak: 0,
+  },
 };
 
 function isBrowser(): boolean {

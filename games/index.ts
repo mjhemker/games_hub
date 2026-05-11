@@ -144,6 +144,19 @@ export const GAMES: Record<GameType, GameConfig> = {
     supportsSpice: false,
     supportsTheme: false,
   },
+  'ride-the-bus': {
+    id: 'ride-the-bus',
+    name: 'Ride the Bus',
+    tagline: 'Cards · 3+ players',
+    blurb: 'Guess wrong and you ride the bus.',
+    icon: 'Bus',
+    gradient: 'from-orange-500 to-red-600',
+    accent: 'var(--game-beer-pressure)',
+    num: '12',
+    phase: 1,
+    supportsSpice: false,
+    supportsTheme: false,
+  },
 };
 
 export const PHASE_1_GAMES = Object.values(GAMES).filter((g) => g.phase === 1);
