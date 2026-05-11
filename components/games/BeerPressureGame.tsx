@@ -90,6 +90,7 @@ export function BeerPressureGame() {
   const [showDeckPicker, setShowDeckPicker] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateTheme, setGenerateTheme] = useState('');
+  const [selectedRule, setSelectedRule] = useState<Card | null>(null);
 
   // Load saved state on mount
   useEffect(() => {
@@ -661,23 +662,97 @@ export function BeerPressureGame() {
             <Kicker color="var(--muted)">
               RULES IN PLAY · {activeRules.length}/{MAX_ACTIVE_RULES}
             </Kicker>
-            <div
-              style={{
-                fontFamily: 'var(--font-serif)',
-                fontSize: 14,
-                fontStyle: 'italic',
-                color: 'var(--cream-2)',
-                lineHeight: 1.5,
-                marginTop: 8,
-              }}
-            >
+            <div style={{ marginTop: 8 }}>
               {activeRules.map((rule) => (
-                <div key={rule.id}>· {rule.text.length > 40 ? rule.text.slice(0, 40) + '...' : rule.text}</div>
+                <button
+                  key={rule.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedRule(rule);
+                  }}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    textAlign: 'left',
+                    background: 'none',
+                    border: 'none',
+                    padding: '6px 0',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: 14,
+                    fontStyle: 'italic',
+                    color: 'var(--cream-2)',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  · {rule.text.length > 45 ? rule.text.slice(0, 45) + '...' : rule.text}
+                  {rule.text.length > 45 && (
+                    <span style={{ color: 'var(--copper)', marginLeft: 4, fontSize: 10 }}>TAP</span>
+                  )}
+                </button>
               ))}
             </div>
           </div>
         )}
       </div>
+
+      {/* Rule Detail Modal */}
+      {selectedRule && (
+        <div
+          onClick={() => setSelectedRule(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 22,
+            zIndex: 100,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--ink-2)',
+              border: '1px solid var(--copper)',
+              padding: 24,
+              maxWidth: 400,
+              width: '100%',
+            }}
+          >
+            <Kicker color="var(--copper)">RULE IN PLAY</Kicker>
+            <div
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: 20,
+                color: 'var(--cream)',
+                marginTop: 12,
+                lineHeight: 1.4,
+              }}
+            >
+              {selectedRule.text}
+            </div>
+            <button
+              onClick={() => setSelectedRule(null)}
+              style={{
+                marginTop: 20,
+                width: '100%',
+                padding: '12px 20px',
+                background: 'var(--cream)',
+                color: 'var(--ink)',
+                border: 'none',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                letterSpacing: 1.5,
+                cursor: 'pointer',
+              }}
+            >
+              GOT IT
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Actions */}
       <div style={{ position: 'fixed', bottom: 50, left: 16, right: 16, display: 'flex', gap: 8 }}>
