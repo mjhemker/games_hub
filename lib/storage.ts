@@ -79,6 +79,10 @@ const DEFAULT_GAME_STATE: GameState = {
     currentDeckId: null,
     checkedRules: [],
   },
+  'schlebens': {
+    totalRolls: 0,
+    schlebensCount: 0,
+  },
 };
 
 function isBrowser(): boolean {

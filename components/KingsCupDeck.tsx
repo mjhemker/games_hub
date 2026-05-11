@@ -49,7 +49,7 @@ export function KingsCupDeck() {
   const [drawnCard, setDrawnCard] = useState<PlayingCard | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isShuffling, setIsShuffling] = useState(false);
-  const [cardKey, setCardKey] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
 
   // Initialize deck on mount if empty - defer to avoid setState during render
   useEffect(() => {
@@ -70,6 +70,7 @@ export function KingsCupDeck() {
 
   const initGame = () => {
     setIsShuffling(true);
+    setIsFlipped(false);
     vibrate([50, 30, 50, 30, 50]);
 
     setTimeout(() => {
@@ -81,7 +82,6 @@ export function KingsCupDeck() {
         isGameOver: false,
       });
       setDrawnCard(null);
-      setCardKey(prev => prev + 1);
       setIsShuffling(false);
     }, 600);
   };
@@ -111,24 +111,42 @@ export function KingsCupDeck() {
     const newDeck = state.deck.slice(1);
     const newDrawnCards = [...state.drawnCards, card];
     const newKingsDrawn = card.rank === 'K' ? state.kingsDrawn + 1 : state.kingsDrawn;
-    const isGameOver = newKingsDrawn >= 4;
+    const gameOver = newKingsDrawn >= 4;
 
-    setDrawnCard(card as PlayingCard);
-    setCardKey(prev => prev + 1);
-
-    setTimeout(() => {
-      updateGameState('kings-cup', {
-        deck: newDeck,
-        drawnCards: newDrawnCards,
-        kingsDrawn: newKingsDrawn,
-        isGameOver,
-      });
-      setIsDrawing(false);
-
-      if (isGameOver) {
-        vibrate([100, 50, 100, 50, 200]);
-      }
-    }, 300);
+    // If already flipped, flip back first then flip to new card
+    if (isFlipped) {
+      setIsFlipped(false);
+      setTimeout(() => {
+        setDrawnCard(card as PlayingCard);
+        setIsFlipped(true);
+        updateGameState('kings-cup', {
+          deck: newDeck,
+          drawnCards: newDrawnCards,
+          kingsDrawn: newKingsDrawn,
+          isGameOver: gameOver,
+        });
+        setIsDrawing(false);
+        if (gameOver) {
+          vibrate([100, 50, 100, 50, 200]);
+        }
+      }, 300);
+    } else {
+      // First draw - just flip
+      setDrawnCard(card as PlayingCard);
+      setIsFlipped(true);
+      setTimeout(() => {
+        updateGameState('kings-cup', {
+          deck: newDeck,
+          drawnCards: newDrawnCards,
+          kingsDrawn: newKingsDrawn,
+          isGameOver: gameOver,
+        });
+        setIsDrawing(false);
+        if (gameOver) {
+          vibrate([100, 50, 100, 50, 200]);
+        }
+      }, 300);
+    }
   };
 
   const rule = drawnCard ? settings.kingsCupRules[drawnCard.rank] : null;
@@ -197,8 +215,8 @@ export function KingsCupDeck() {
             <PrimaryButton onClick={initGame}>PLAY AGAIN</PrimaryButton>
           </motion.div>
         ) : (
-          <div style={{ position: 'relative', height: 280 }}>
-            {/* Fanned deck cards */}
+          <div style={{ position: 'relative', height: 280, perspective: '1000px' }}>
+            {/* Deck pile (background cards) */}
             <motion.div
               animate={isShuffling ? { rotate: [0, -5, 5, -5, 5, 0] } : {}}
               transition={{ duration: 0.6 }}
@@ -210,7 +228,7 @@ export function KingsCupDeck() {
                 justifyContent: 'center',
               }}
             >
-              {[-12, -6, 0, 6, 12].map((r, i) => (
+              {[-12, -6, 6, 12].map((r, i) => (
                 <motion.div
                   key={i}
                   animate={isShuffling ? {
@@ -222,54 +240,114 @@ export function KingsCupDeck() {
                     position: 'absolute',
                     width: 150,
                     height: 220,
-                    background: i === 2 && drawnCard ? 'var(--cream)' : 'var(--ink-2)',
+                    background: 'var(--ink-2)',
                     border: '1px solid var(--rule)',
+                    borderRadius: 8,
                     transform: `rotate(${r}deg) translateY(${Math.abs(r)}px)`,
+                  }}
+                />
+              ))}
+            </motion.div>
+
+            {/* Main card (flippable) */}
+            <div
+              onClick={drawCard}
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 150,
+                height: 220,
+                cursor: 'pointer',
+              }}
+            >
+              <motion.div
+                animate={{ rotateY: isFlipped ? 180 : 0 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  position: 'relative',
+                  transformStyle: 'preserve-3d',
+                }}
+              >
+                {/* Card back (face down - visible when not flipped) */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backfaceVisibility: 'hidden',
+                    background: 'var(--ink-2)',
+                    border: '1px solid var(--rule)',
+                    borderRadius: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <div style={{
+                    width: '80%',
+                    height: '80%',
+                    border: '2px solid var(--rule)',
+                    borderRadius: 4,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                  }}>
+                    <div style={{
+                      fontFamily: 'var(--font-serif)',
+                      fontStyle: 'italic',
+                      fontSize: 28,
+                      color: 'var(--game-kings-cup)',
+                    }}>
+                      K
+                    </div>
+                    <Kicker color="var(--muted)" style={{ fontSize: 8 }}>TAP TO DRAW</Kicker>
+                  </div>
+                </div>
+
+                {/* Card front (face up - visible when flipped 180deg) */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backfaceVisibility: 'hidden',
+                    transform: 'rotateY(180deg)',
+                    background: 'var(--cream)',
+                    border: '1px solid var(--rule)',
+                    borderRadius: 8,
                     padding: 14,
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     fontFamily: 'var(--font-serif)',
                     fontStyle: 'italic',
-                    cursor: i === 2 ? 'pointer' : 'default',
                   }}
-                  onClick={i === 2 ? drawCard : undefined}
                 >
-                  {i === 2 && drawnCard ? (
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={cardKey}
-                        initial={{ rotateY: 180, opacity: 0 }}
-                        animate={{ rotateY: 0, opacity: 1 }}
-                        exit={{ rotateY: -180, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        style={{
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          color: suitColors[drawnCard.suit],
-                        }}
-                      >
-                        <div style={{ fontSize: 18 }}>{drawnCard.rank}{drawnCard.suit}</div>
-                        <div style={{ textAlign: 'center', fontSize: 60, lineHeight: 0.9 }}>{drawnCard.rank}</div>
-                        <div style={{ fontSize: 18, textAlign: 'right' }}>{drawnCard.suit}</div>
-                      </motion.div>
-                    </AnimatePresence>
-                  ) : i === 2 ? (
-                    <div style={{
-                      height: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--muted)',
-                    }}>
-                      <Kicker color="var(--muted)">TAP TO DRAW</Kicker>
-                    </div>
-                  ) : null}
-                </motion.div>
-              ))}
-            </motion.div>
+                  {drawnCard && (
+                    <>
+                      <div style={{ fontSize: 22, color: suitColors[drawnCard.suit] }}>
+                        {drawnCard.rank}{drawnCard.suit}
+                      </div>
+                      <div style={{
+                        textAlign: 'center',
+                        fontSize: 72,
+                        lineHeight: 0.9,
+                        color: suitColors[drawnCard.suit]
+                      }}>
+                        {drawnCard.suit}
+                      </div>
+                      <div style={{ fontSize: 22, textAlign: 'right', transform: 'rotate(180deg)', color: suitColors[drawnCard.suit] }}>
+                        {drawnCard.rank}{drawnCard.suit}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            </div>
           </div>
         )}
       </div>

@@ -28,6 +28,7 @@ export function MostLikelyToGame() {
   const [phase, setPhase] = useState<GamePhase>('setup');
   const [players, setPlayers] = useState<string[]>([]);
   const [scores, setScores] = useState<Record<string, number>>({});
+  const [currentVotes, setCurrentVotes] = useState<Record<string, number>>({});
   const [currentDeck] = useState<CardDeck>(BUILT_IN_DECK);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cardKey, setCardKey] = useState(0);
@@ -51,12 +52,13 @@ export function MostLikelyToGame() {
     if (players.length >= 3) {
       setPhase('playing');
       setCurrentIndex(0);
+      setCurrentVotes(Object.fromEntries(players.map((p) => [p, 0])));
     }
   };
 
   const voteForPlayer = (playerName: string) => {
     vibrate(50);
-    setScores((prev) => ({
+    setCurrentVotes((prev) => ({
       ...prev,
       [playerName]: (prev[playerName] || 0) + 1,
     }));
@@ -64,6 +66,16 @@ export function MostLikelyToGame() {
 
   const nextCard = () => {
     vibrate(50);
+    // Add current votes to total scores
+    setScores((prev) => {
+      const newScores = { ...prev };
+      Object.entries(currentVotes).forEach(([player, votes]) => {
+        newScores[player] = (newScores[player] || 0) + votes;
+      });
+      return newScores;
+    });
+    // Reset votes for new card
+    setCurrentVotes(Object.fromEntries(players.map((p) => [p, 0])));
     setCurrentIndex((prev) => prev + 1);
     setCardKey(prev => prev + 1);
   };
@@ -369,39 +381,44 @@ export function MostLikelyToGame() {
       <div style={{ padding: '0 22px' }}>
         <Kicker color="var(--muted)">TAP TO VOTE</Kicker>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginTop: 10 }}>
-          {players.map((player) => (
-            <button
-              key={player}
-              onClick={() => voteForPlayer(player)}
-              style={{
-                padding: 14,
-                border: '1px solid var(--rule)',
-                background: 'var(--ink-2)',
-                cursor: 'pointer',
-                textAlign: 'center',
-              }}
-            >
-              <div
+          {players.map((player) => {
+            const votes = currentVotes[player] || 0;
+            const maxVotes = Math.max(...Object.values(currentVotes), 0);
+            const isLeading = votes > 0 && votes === maxVotes;
+            return (
+              <button
+                key={player}
+                onClick={() => voteForPlayer(player)}
                 style={{
-                  fontFamily: 'var(--font-serif)',
-                  fontSize: 16,
-                  color: 'var(--cream)',
+                  padding: 14,
+                  border: isLeading ? '1px solid var(--copper)' : '1px solid var(--rule)',
+                  background: isLeading ? 'var(--ink-2)' : 'transparent',
+                  cursor: 'pointer',
+                  textAlign: 'center',
                 }}
               >
-                {player}
-              </div>
-              <div
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 10,
-                  color: 'var(--muted)',
-                  marginTop: 4,
-                }}
-              >
-                {scores[player] || 0} votes
-              </div>
-            </button>
-          ))}
+                <div
+                  style={{
+                    fontFamily: 'var(--font-serif)',
+                    fontSize: 16,
+                    color: isLeading ? 'var(--copper)' : 'var(--cream)',
+                  }}
+                >
+                  {player}
+                </div>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 10,
+                    color: 'var(--muted)',
+                    marginTop: 4,
+                  }}
+                >
+                  {votes} vote{votes !== 1 ? 's' : ''}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 

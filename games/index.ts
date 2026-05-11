@@ -131,6 +131,19 @@ export const GAMES: Record<GameType, GameConfig> = {
     supportsSpice: false,
     supportsTheme: true,
   },
+  'schlebens': {
+    id: 'schlebens',
+    name: 'Schlebens',
+    tagline: 'Dice · 2+ players',
+    blurb: 'Roll the dice. 7, 11, or doubles = SCHLEBENS!',
+    icon: 'Dice5',
+    gradient: 'from-lime-500 to-green-600',
+    accent: 'var(--copper)',
+    num: '11',
+    phase: 1,
+    supportsSpice: false,
+    supportsTheme: false,
+  },
 };
 
 export const PHASE_1_GAMES = Object.values(GAMES).filter((g) => g.phase === 1);

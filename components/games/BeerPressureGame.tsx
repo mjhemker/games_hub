@@ -626,14 +626,26 @@ export function BeerPressureGame() {
           }}
         >
           <div>
+            {/* Big turn indicator */}
+            <div
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: 28,
+                fontStyle: 'italic',
+                color: isRule ? 'var(--copper)' : 'var(--cream)',
+                marginBottom: 8,
+              }}
+            >
+              {currentPlayer}
+            </div>
             <Kicker color={isRule ? 'var(--copper)' : 'var(--muted)'}>
-              {isRule ? `NEW RULE · ${currentPlayer?.toUpperCase()}` : currentPlayer?.toUpperCase()}
+              {isRule ? 'NEW RULE' : 'YOUR TURN'}
             </Kicker>
             <div
               style={{
                 fontFamily: 'var(--font-serif)',
-                fontSize: 30,
-                lineHeight: 1.15,
+                fontSize: 28,
+                lineHeight: 1.2,
                 marginTop: 14,
                 letterSpacing: -0.4,
                 color: 'var(--cream)',

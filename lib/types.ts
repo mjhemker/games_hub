@@ -8,7 +8,8 @@ export type GameType =
   | 'paranoia'
   | 'categories'
   | 'power-hour'
-  | 'movie-mode';
+  | 'movie-mode'
+  | 'schlebens';
 
 export type CardCategory =
   | 'challenge'
@@ -123,6 +124,11 @@ export type MovieModeState = {
   checkedRules: string[];
 };
 
+export type SchlebensState = {
+  totalRolls: number;
+  schlebensCount: number;
+};
+
 export type GameState = {
   'beer-pressure': BeerPressureState;
   'truth-or-drink': TruthOrDrinkState;
@@ -134,6 +140,7 @@ export type GameState = {
   'paranoia': ParanoiaState;
   'power-hour': PowerHourState;
   'movie-mode': MovieModeState;
+  'schlebens': SchlebensState;
 };
 
 export type GameConfig = {
